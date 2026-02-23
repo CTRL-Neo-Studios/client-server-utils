@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "name": "@ctrl-neo/nuxt-cs-utils-playground",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate"
+  },
+  "dependencies": {
+    "nuxt": "^4.3.1"
+  }
+}

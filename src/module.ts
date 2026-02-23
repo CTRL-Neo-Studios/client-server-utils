@@ -1,4 +1,10 @@
-import {defineNuxtModule, addPlugin, createResolver, addImportsDir} from '@nuxt/kit'
+import {
+  defineNuxtModule,
+  addPlugin,
+  createResolver,
+  addImportsDir,
+  addServerImportsDir
+} from '@nuxt/kit'
 
 // Module options TypeScript interface definition
 export interface ModuleOptions {}
@@ -15,5 +21,6 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Do not add the extension since the `.ts` will be transpiled to `.mjs` after `npm run prepack`
     addImportsDir(resolver.resolve('./runtime/shared/utils'))
+    addServerImportsDir(resolver.resolve('./runtime/shared/utils'))
   },
 })

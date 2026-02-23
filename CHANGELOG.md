@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v1.3.0
+
+[compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v1.2.0...v1.3.0)
+
+### 🚀 Enhancements
+
+- Add @type32/nuxt-cs-utils alias and normalize import paths ([1062e51](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/1062e51))
+- Add parsing utils to auto-imports and aliases ([08e5194](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/08e5194))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v1.2.0
 
 [compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v1.1.0...v1.2.0)

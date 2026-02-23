@@ -20,7 +20,11 @@ export default defineNuxtModule<ModuleOptions>({
     const resolver = createResolver(import.meta.url)
 
     // Do not add the extension since the `.ts` will be transpiled to `.mjs` after `npm run prepack`
-    addImportsDir(resolver.resolve('./runtime/shared/utils'))
-    addServerImportsDir(resolver.resolve('./runtime/shared/utils'))
+    addImportsDir(resolver.resolve('runtime/shared/utils'))
+    addServerImportsDir(resolver.resolve('runtime/shared/utils'))
+
+    _nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
+      './runtime/shared/utils',
+    )
   },
 })

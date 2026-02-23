@@ -32,7 +32,7 @@ My new Nuxt module for doing amazing things.
 Install the module to your Nuxt application with one command:
 
 ```bash
-bunx nuxt module add @ctrl-neo/nuxt-cs-utils
+bunx nuxt module add @type32/nuxt-cs-utils
 ```
 
 That's it! You can now use My Module in your Nuxt app ✨

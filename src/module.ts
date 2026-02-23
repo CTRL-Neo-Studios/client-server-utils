@@ -5,7 +5,7 @@ export interface ModuleOptions {}
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: '@ctrl-neo/nuxt-cs-utils',
+    name: '@type32/nuxt-cs-utils',
     configKey: 'csUtils',
   },
   // Default configuration options of the Nuxt module

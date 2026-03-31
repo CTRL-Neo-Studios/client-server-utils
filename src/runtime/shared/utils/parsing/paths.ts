@@ -87,3 +87,63 @@ export function getFileExtensionFromPath(path: string) {
 	const fn = path.split('.')
 	return fn[fn.length - 1] || 'unknown'
 }
+
+/**
+ * Extracts the filename (with or without extension) from a file path.
+ *
+ * @param path The file path to extract the filename from.
+ * @param options An optional options object.
+ * @param options.preserveExtension Whether to keep the file extension in the result. Defaults to `true`.
+ * @param options.replaceExtension If provided, replaces the current extension with this one (including the dot).
+ * @param options.sanitize Whether to pass the result through {@link sanitizeFilename}. Defaults to `false`.
+ * @param options.sanitizeOptions Options forwarded to {@link sanitizeFilename} when `sanitize` is `true`.
+ * @returns The extracted filename string.
+ */
+export function getFilenameFromPath(
+	path: string,
+	options?: {
+		preserveExtension?: boolean;
+		replaceExtension?: string;
+		sanitize?: boolean;
+		sanitizeOptions?: { replacement?: string };
+	}
+): string {
+	const segments = path.replace(/\\/g, '/').split('/');
+	const fullFilename = segments[segments.length - 1] || '';
+
+	if (!fullFilename) {
+		return '';
+	}
+
+	const lastDotIndex = fullFilename.lastIndexOf('.');
+	const hasExtension = lastDotIndex > 0;
+
+	let filename: string;
+
+	if (!hasExtension) {
+		filename = fullFilename;
+	} else if (options?.preserveExtension !== false && !options?.replaceExtension) {
+		filename = fullFilename;
+	} else {
+		const baseName = fullFilename.slice(0, lastDotIndex);
+		filename = baseName;
+	}
+
+	if (options?.replaceExtension !== undefined) {
+		const ext = options.replaceExtension.startsWith('.')
+			? options.replaceExtension
+			: '.' + options.replaceExtension;
+		// Strip the existing extension first if present
+		if (hasExtension) {
+			filename = fullFilename.slice(0, lastDotIndex) + ext;
+		} else {
+			filename = fullFilename + ext;
+		}
+	}
+
+	if (options?.sanitize) {
+		filename = sanitizeFilename(filename, options.sanitizeOptions);
+	}
+
+	return filename;
+}

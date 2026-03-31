@@ -19,9 +19,7 @@ export function getTodayDate(): CalendarDate {
 	return today(getLocalTimeZone())
 }
 
-export function wrapDate(date?: Date | null): Date {
-	if (!date)
-		return new Date()
-	else
-		return new Date(date)
+export function wrapDate(dateValue: Date | number | string | null | undefined): Date {
+	if (dateValue == null) return new Date()
+	return new Date(dateValue)
 }

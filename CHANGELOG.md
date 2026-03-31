@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v1.4.0
+
+[compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v1.3.0...v1.4.0)
+
+### 🚀 Enhancements
+
+- **utils:** Add getFilenameFromPath utility and extend wrapDate parameter types ([909a0d1](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/909a0d1))
+
+### 🏡 Chore
+
+- **release:** V1.3.0 ([0d6205a](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/0d6205a))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v1.3.0
 
 [compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v1.2.0...v1.3.0)

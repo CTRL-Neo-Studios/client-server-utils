@@ -20,36 +20,34 @@ export default defineNuxtModule<ModuleOptions>({
 		const resolver = createResolver(import.meta.url)
 
 		// Do not add the extension since the `.ts` will be transpiled to `.mjs` after `npm run prepack`
-		addImportsDir(resolver.resolve('runtime/shared/utils'))
-		addImportsDir(resolver.resolve('runtime/shared/utils/parsing'))
+		addImportsDir(resolver.resolve('runtime/shared/utils/shared'))
+		addImportsDir(resolver.resolve('runtime/shared/utils/shared/parsing'))
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/shared'))
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/shared/parsing'))
 
-		// Nitro's directory scanner is not recursive by default, so each subdirectory
-		// must be registered explicitly for server-side auto-imports to work.
-		addServerImportsDir(resolver.resolve('runtime/shared/utils'))
-		addServerImportsDir(resolver.resolve('runtime/shared/utils/parsing'))
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/server'))
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/server/pagination'))
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/server/parsing'))
 
-		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-			'./runtime/shared/utils',
+		_nuxt.options.build.transpile.push(
+			'zod',
+			'@internationalized/date'
+		)
+
+		_nuxt.options.alias['#nuxt-cs-utils'] = resolver.resolve(
+			'./runtime',
 		)
 
 		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-			'./runtime/shared/utils/parsing',
+			'./runtime/shared/types/client/utility',
 		)
 
 		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-			'./runtime/shared/types',
+			'./runtime/shared/types/shared/utility',
 		)
 
 		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-			'./runtime/shared/types/client',
-		)
-
-		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-			'./runtime/shared/types/shared',
-		)
-
-		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-			'./runtime/shared/types/server',
+			'./runtime/shared/types/server/utility',
 		)
 	},
 })

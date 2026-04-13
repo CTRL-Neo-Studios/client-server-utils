@@ -2,7 +2,7 @@ import {
 	defineNuxtModule,
 	createResolver,
 	addImportsDir,
-	addServerImportsDir
+	addServerImportsDir,
 } from '@nuxt/kit'
 
 // Module options TypeScript interface definition
@@ -23,10 +23,10 @@ export default defineNuxtModule<ModuleOptions>({
 		addImportsDir(resolver.resolve('runtime/shared/utils'))
 		addImportsDir(resolver.resolve('runtime/shared/utils/parsing'))
 
-		// addImportsDir(resolver.resolve('runtime/shared/types/client'))
-		// addImportsDir(resolver.resolve('runtime/shared/types/shared'))
-		// addServerImportsDir(resolver.resolve('runtime/shared/types/shared'))
-		// addServerImportsDir(resolver.resolve('runtime/shared/types/server'))
+		addImportsDir(resolver.resolve('runtime/shared/types/client'))
+		addImportsDir(resolver.resolve('runtime/shared/types/shared'))
+		addServerImportsDir(resolver.resolve('runtime/shared/types/shared'))
+		addServerImportsDir(resolver.resolve('runtime/shared/types/server'))
 
 		// Nitro's directory scanner is not recursive by default, so each subdirectory
 		// must be registered explicitly for server-side auto-imports to work.

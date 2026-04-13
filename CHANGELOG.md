@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.5.4
+
+[compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v1.5.3...v1.5.4)
+
+### 🏡 Chore
+
+- Rename ([ef6294a](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/ef6294a))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v1.5.3
 
 [compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v1.5.2...v1.5.3)

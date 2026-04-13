@@ -23,6 +23,11 @@ export default defineNuxtModule<ModuleOptions>({
 		addImportsDir(resolver.resolve('runtime/shared/utils'))
 		addImportsDir(resolver.resolve('runtime/shared/utils/parsing'))
 
+		// addImportsDir(resolver.resolve('runtime/shared/types/client'))
+		// addImportsDir(resolver.resolve('runtime/shared/types/shared'))
+		// addServerImportsDir(resolver.resolve('runtime/shared/types/shared'))
+		// addServerImportsDir(resolver.resolve('runtime/shared/types/server'))
+
 		// Nitro's directory scanner is not recursive by default, so each subdirectory
 		// must be registered explicitly for server-side auto-imports to work.
 		addServerImportsDir(resolver.resolve('runtime/shared/utils'))
@@ -34,6 +39,18 @@ export default defineNuxtModule<ModuleOptions>({
 
 		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
 			'./runtime/shared/utils/parsing',
+		)
+
+		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
+			'./runtime/shared/types/client',
+		)
+
+		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
+			'./runtime/shared/types/shared',
+		)
+
+		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
+			'./runtime/shared/types/server',
 		)
 	},
 })

@@ -42,6 +42,10 @@ export default defineNuxtModule<ModuleOptions>({
 		)
 
 		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
+			'./runtime/shared/types',
+		)
+
+		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
 			'./runtime/shared/types/client',
 		)
 

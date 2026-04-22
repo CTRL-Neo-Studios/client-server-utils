@@ -2,7 +2,7 @@ import {
 	defineNuxtModule,
 	createResolver,
 	addImportsDir,
-	addServerImportsDir,
+	addServerImportsDir, addTypeTemplate,
 } from '@nuxt/kit'
 
 // Module options TypeScript interface definition
@@ -20,14 +20,39 @@ export default defineNuxtModule<ModuleOptions>({
 		const resolver = createResolver(import.meta.url)
 
 		// Do not add the extension since the `.ts` will be transpiled to `.mjs` after `npm run prepack`
-		addImportsDir(resolver.resolve('runtime/shared/utils/shared'))
-		addImportsDir(resolver.resolve('runtime/shared/utils/shared/parsing'))
-		addServerImportsDir(resolver.resolve('runtime/shared/utils/shared'))
-		addServerImportsDir(resolver.resolve('runtime/shared/utils/shared/parsing'))
+		addImportsDir(resolver.resolve('runtime/utils/shared'))
+		addImportsDir(resolver.resolve('runtime/utils/shared/parsing'))
+		addServerImportsDir(resolver.resolve('runtime/utils/shared'))
+		addServerImportsDir(resolver.resolve('runtime/utils/shared/parsing'))
 
-		addServerImportsDir(resolver.resolve('runtime/shared/utils/server'))
-		addServerImportsDir(resolver.resolve('runtime/shared/utils/server/pagination'))
-		addServerImportsDir(resolver.resolve('runtime/shared/utils/server/parsing'))
+		addServerImportsDir(resolver.resolve('runtime/utils/server'))
+		addServerImportsDir(resolver.resolve('runtime/utils/server/pagination'))
+		addServerImportsDir(resolver.resolve('runtime/utils/server/parsing'))
+
+		addTypeTemplate({
+			src: resolver.resolve('./runtime/types/server/utility'),
+			filename: 'types/utility-server.d.ts',
+		})
+
+		addTypeTemplate({
+			src: resolver.resolve('./runtime/types/client/utility'),
+			filename: 'types/utility-client.d.ts',
+		})
+
+		addTypeTemplate({
+			src: resolver.resolve('./runtime/types/shared/utility'),
+			filename: 'types/utility.d.ts',
+		})
+
+		addTypeTemplate({
+			src: resolver.resolve('./runtime/types/shared/role-checking'),
+			filename: 'types/role-checking.d.ts',
+		})
+
+		addTypeTemplate({
+			src: resolver.resolve('./runtime/types/shared/permissions'),
+			filename: 'types/permissions.d.ts',
+		})
 
 		_nuxt.options.build.transpile.push(
 			'zod',
@@ -38,16 +63,20 @@ export default defineNuxtModule<ModuleOptions>({
 			'./runtime',
 		)
 
-		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-			'./runtime/shared/types/client/utility',
-		)
-
-		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-			'./runtime/shared/types/shared/utility',
-		)
-
-		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-			'./runtime/shared/types/server/utility',
-		)
+		// _nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
+		// 	'./runtime/types/client/utility',
+		// )
+		//
+		// _nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
+		// 	'./runtime/types/shared/utility',
+		// )
+		//
+		// _nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
+		// 	'./runtime/types/server/utility',
+		// )
+		//
+		// _nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
+		// 	'./runtime/types/server/role-checking',
+		// )
 	},
 })

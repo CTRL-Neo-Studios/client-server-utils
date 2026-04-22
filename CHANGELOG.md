@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v2.0.1
+
+[compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v3.0.0-0...v2.0.1)
+
+### 🏡 Chore
+
+- **release:** V2.0.0 ([a77ce96](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/a77ce96))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v2.0.0
 
 [compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v3.0.0-0...v2.0.0)

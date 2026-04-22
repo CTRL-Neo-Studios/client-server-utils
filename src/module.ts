@@ -22,8 +22,10 @@ export default defineNuxtModule<ModuleOptions>({
 		// Do not add the extension since the `.ts` will be transpiled to `.mjs` after `npm run prepack`
 		addImportsDir(resolver.resolve('runtime/utils/shared'))
 		addImportsDir(resolver.resolve('runtime/utils/shared/parsing'))
+		addImportsDir(resolver.resolve('runtime/utils/shared/permissions'))
 		addServerImportsDir(resolver.resolve('runtime/utils/shared'))
 		addServerImportsDir(resolver.resolve('runtime/utils/shared/parsing'))
+		addServerImportsDir(resolver.resolve('runtime/utils/shared/permissions'))
 
 		addServerImportsDir(resolver.resolve('runtime/utils/server'))
 		addServerImportsDir(resolver.resolve('runtime/utils/server/pagination'))

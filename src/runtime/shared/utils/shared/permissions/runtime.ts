@@ -1,20 +1,20 @@
-// permission-engine.ts
-
 import type {
 	Clause,
 	EvalResult,
 	Permission,
-	PermissionConfig,
-	PermissionEngine,
 	TraceNode,
 	Verdict,
-	VerdictOutcome
-} from "../../types/shared/permissions";
+	VerdictOutcome,
+} from "../../../types/shared/permissions";
 
 /* ------------------------------------------------------------------ */
 /*  Clause builders                                                    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Creates a hard gate clause. If it fails, permission is denied.
+ * Use for security-critical checks (e.g., "user must be admin").
+ */
 export function gate<C>(
 	name: string,
 	fn: (ctx: C) => boolean | Promise<boolean>,
@@ -23,6 +23,11 @@ export function gate<C>(
 	return { kind: 'gate', name, message: opts?.message, fn }
 }
 
+/**
+ * Creates a prerequisite clause. If it fails, the outcome is
+ * `prerequisite_missing` rather than `denied`.
+ * Use for setup steps (e.g., "user must have 2FA enabled").
+ */
 export function prerequisite<C>(
 	name: string,
 	fn: (ctx: C) => boolean | Promise<boolean>,
@@ -31,6 +36,10 @@ export function prerequisite<C>(
 	return { kind: 'prerequisite', name, message: opts?.message, fn }
 }
 
+/**
+ * Creates a condition clause. Like a gate, but semantically softer.
+ * Use for business-logic checks (e.g., "post must be published").
+ */
 export function condition<C>(
 	name: string,
 	fn: (ctx: C) => boolean | Promise<boolean>,
@@ -42,6 +51,14 @@ export function condition<C>(
 /**
  * Escape hatch. Your function returns a Verdict; the engine folds it in.
  * Useful for dynamic billing checks, external API calls, etc.
+ *
+ * @example
+ * custom('hasCredits', async (ctx) => {
+ *   const ok = await billing.hasCredits(ctx.userId)
+ *   return ok
+ *     ? { granted: true, permissionId: 'hasCredits', outcome: 'granted' }
+ *     : { granted: false, permissionId: 'hasCredits', outcome: 'denied', message: 'No credits left' }
+ * })
  */
 export function custom<C>(
 	name: string,
@@ -51,26 +68,19 @@ export function custom<C>(
 	return { kind: 'custom', name, message: opts?.message, fn }
 }
 
+/** Combines clauses with AND logic. All must pass. */
 export function allOf<C>(...clauses: Clause<C>[]): Clause<C> {
 	return { kind: 'allOf', clauses }
 }
 
+/** Combines clauses with OR logic. At least one must pass. */
 export function anyOf<C>(...clauses: Clause<C>[]): Clause<C> {
 	return { kind: 'anyOf', clauses }
 }
 
+/** Negates a single clause. */
 export function not<C>(clause: Clause<C>): Clause<C> {
 	return { kind: 'not', clause }
-}
-
-/* ------------------------------------------------------------------ */
-/*  Definition                                                         */
-/* ------------------------------------------------------------------ */
-
-export function definePermission<Id extends string, C>(
-	config: PermissionConfig<Id, C>
-): Permission<Id, C> {
-	return { id: config.id, config }
 }
 
 /* ------------------------------------------------------------------ */
@@ -181,7 +191,7 @@ async function runClause<C>(
 		const error = err instanceof Error ? err : new Error(String(err))
 		trace.granted = false
 		trace.error = true
-		trace.message = clause.message ?? clause.name
+		trace.message = ('name' in clause ? clause.message : undefined) ?? getClauseName(clause)
 		return { passed: false, trace, error }
 	}
 }
@@ -243,6 +253,10 @@ function findFirstFailure(
 /*  Standalone runners                                                 */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Checks a permission in fast mode (short-circuits on first failure).
+ * @returns A verdict with `granted` and optional trace.
+ */
 export async function checkPermission<C, Id extends string>(
 	perm: Permission<Id, C>,
 	ctx: C
@@ -252,6 +266,10 @@ export async function checkPermission<C, Id extends string>(
 	return buildVerdict(perm.id, res, 'check')
 }
 
+/**
+ * Audits a permission (evaluates the full tree, useful for debugging).
+ * @returns A verdict with a complete `trace` of all clauses.
+ */
 export async function auditPermission<C, Id extends string>(
 	perm: Permission<Id, C>,
 	ctx: C
@@ -259,36 +277,4 @@ export async function auditPermission<C, Id extends string>(
 	const root = allOf(...perm.config.check)
 	const res = await runClause(root, ctx, 'audit')
 	return buildVerdict(perm.id, res, 'audit')
-}
-
-/* ------------------------------------------------------------------ */
-/*  Engine factory (with context merging)                              */
-/* ------------------------------------------------------------------ */
-
-export function createPermissionEngine<C, U extends string = string>(
-	existingBase?: Partial<C>
-): PermissionEngine<C, U> {
-	const base = existingBase ? { ...existingBase } : undefined
-
-	function resolveContext(ctx: C): C {
-		if (!base) return ctx
-		return { ...base, ...ctx } as C
-	}
-
-	return {
-		definePermission: (config) => definePermission(config),
-
-		check: async (perm, ctx) => {
-			return checkPermission(perm, resolveContext(ctx))
-		},
-
-		audit: async (perm, ctx) => {
-			return auditPermission(perm, resolveContext(ctx))
-		},
-
-		withContext: (newBase) => {
-			const merged = base ? { ...base, ...newBase } : { ...newBase }
-			return createPermissionEngine<C, U>(merged)
-		},
-	}
 }

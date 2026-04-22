@@ -9,6 +9,18 @@
     ".": {
       "types": "./dist/types.d.mts",
       "import": "./dist/module.mjs"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    },
+    "./server": {
+      "types": "./dist/runtime/server.d.ts",
+      "import": "./dist/runtime/server.js"
+    },
+    "./client": {
+      "types": "./dist/runtime/client.d.ts",
+      "import": "./dist/runtime/client.js"
     }
   },
   "main": "./dist/module.mjs",
@@ -16,6 +28,15 @@
     "*": {
       ".": [
         "./dist/types.d.mts"
+      ],
+      "runtime": [
+        "./dist/runtime/index.d.ts"
+      ],
+      "server": [
+        "./dist/runtime/server.d.ts"
+      ],
+      "client": [
+        "./dist/runtime/client.d.ts"
       ]
     }
   },

@@ -2,83 +2,55 @@ import {
 	defineNuxtModule,
 	createResolver,
 	addImportsDir,
-	addServerImportsDir, addTypeTemplate,
+	addServerImportsDir,
+	addTypeTemplate,
 } from '@nuxt/kit'
 
-// Module options TypeScript interface definition
-export interface ModuleOptions {
-}
+export interface ModuleOptions {}
 
 export default defineNuxtModule<ModuleOptions>({
 	meta: {
 		name: '@type32/nuxt-cs-utils',
 		configKey: 'csUtils',
 	},
-	// Default configuration options of the Nuxt module
 	defaults: {},
 	setup(_options, _nuxt) {
 		const resolver = createResolver(import.meta.url)
 
-		// Do not add the extension since the `.ts` will be transpiled to `.mjs` after `npm run prepack`
-		addImportsDir(resolver.resolve('runtime/utils/shared'))
-		addImportsDir(resolver.resolve('runtime/utils/shared/parsing'))
-		addImportsDir(resolver.resolve('runtime/utils/shared/permissions'))
-		addServerImportsDir(resolver.resolve('runtime/utils/shared'))
-		addServerImportsDir(resolver.resolve('runtime/utils/shared/parsing'))
-		addServerImportsDir(resolver.resolve('runtime/utils/shared/permissions'))
+		// ---- Auto-imports (shared — available in both client and server) ----
+		addImportsDir(resolver.resolve('runtime/shared/utils/shared'))
+		addImportsDir(resolver.resolve('runtime/shared/utils/shared/parsing'))
+		addImportsDir(resolver.resolve('runtime/shared/utils/shared/permissions'))
 
-		addServerImportsDir(resolver.resolve('runtime/utils/server'))
-		addServerImportsDir(resolver.resolve('runtime/utils/server/pagination'))
-		addServerImportsDir(resolver.resolve('runtime/utils/server/parsing'))
+		// ---- Auto-imports (server-only) -------------------------------------
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/shared'))
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/shared/parsing'))
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/shared/permissions'))
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/server'))
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/server/pagination'))
+		addServerImportsDir(resolver.resolve('runtime/shared/utils/server/parsing'))
 
+		// ---- Type templates -------------------------------------------------
+		// Using getContents so these work in both local dev and published installs.
+		// (src-based templates break in published packages because .ts sources
+		//  are not included in the dist output.)
 		addTypeTemplate({
-			src: resolver.resolve('./runtime/types/server/utility.ts'),
-			filename: 'types/utility-server.d.ts',
+			filename: 'types/nuxt-cs-utils.d.ts',
+			getContents: () => `// @type32/nuxt-cs-utils — augmented types\nexport {}`,
 		})
 
-		addTypeTemplate({
-			src: resolver.resolve('./runtime/types/client/utility.ts'),
-			filename: 'types/utility-client.d.ts',
-		})
+		// ---- Transpile third-party deps used at runtime ---------------------
+		_nuxt.options.build.transpile.push('zod', '@internationalized/date')
 
-		addTypeTemplate({
-			src: resolver.resolve('./runtime/types/shared/utility.ts'),
-			filename: 'types/utility.d.ts',
-		})
+		// ---- Aliases --------------------------------------------------------
+		// #nuxt-cs-utils  → internal alias (kept for backwards compatibility)
+		_nuxt.options.alias['#nuxt-cs-utils'] = resolver.resolve('./runtime')
 
-		addTypeTemplate({
-			src: resolver.resolve('./runtime/types/shared/role-checking.ts'),
-			filename: 'types/role-checking.d.ts',
-		})
-
-		addTypeTemplate({
-			src: resolver.resolve('./runtime/types/shared/permissions.ts'),
-			filename: 'types/permissions.d.ts',
-		})
-
-		_nuxt.options.build.transpile.push(
-			'zod',
-			'@internationalized/date'
-		)
-
-		_nuxt.options.alias['#nuxt-cs-utils'] = resolver.resolve(
-			'./runtime',
-		)
-
-		// _nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-		// 	'./runtime/types/client/utility',
-		// )
-		//
-		// _nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-		// 	'./runtime/types/shared/utility',
-		// )
-		//
-		// _nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-		// 	'./runtime/types/server/utility',
-		// )
-		//
-		// _nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve(
-		// 	'./runtime/types/server/role-checking',
-		// )
+		// @type32/nuxt-cs-utils         → shared public surface (types + utils)
+		// @type32/nuxt-cs-utils/server  → server subpath
+		// @type32/nuxt-cs-utils/client  → client subpath
+		_nuxt.options.alias['@type32/nuxt-cs-utils'] = resolver.resolve('./runtime/index')
+		_nuxt.options.alias['@type32/nuxt-cs-utils/server'] = resolver.resolve('./runtime/server')
+		_nuxt.options.alias['@type32/nuxt-cs-utils/client'] = resolver.resolve('./runtime/client')
 	},
 })

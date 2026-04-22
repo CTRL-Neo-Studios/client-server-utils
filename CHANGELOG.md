@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v2.0.3
+
+[compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.0.2...v2.0.3)
+
+### 💅 Refactors
+
+- Reorganize runtime into subpath exports ([3fe569b](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/3fe569b))
+
+### 🏡 Chore
+
+- Bun lockfile update ([d075263](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/d075263))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v2.0.2
 
 [compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.0.1...v2.0.2)

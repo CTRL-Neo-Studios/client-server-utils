@@ -1,6 +1,6 @@
 {
   "name": "@type32/nuxt-cs-utils",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Client/Server Utilities for Nuxt.",
   "repository": "https://github.com/CTRL-Neo-Studios/client-server-utils",
   "license": "MIT",

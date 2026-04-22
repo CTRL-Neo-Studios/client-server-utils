@@ -1,7 +1,7 @@
 {
   "name": "@type32/nuxt-cs-utils",
   "version": "1.6.0",
-  "description": "My new Nuxt module",
+  "description": "Client/Server Utilities for Nuxt.",
   "repository": "https://github.com/CTRL-Neo-Studios/client-server-utils",
   "license": "MIT",
   "type": "module",
@@ -36,20 +36,20 @@
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
   },
   "dependencies": {
-    "@internationalized/date": "^3.11.0",
-    "@nuxt/kit": "^4.3.1",
+    "@internationalized/date": "^3.12.1",
+    "@nuxt/kit": "^4.4.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@nuxt/devtools": "^3.2.1",
+    "@nuxt/devtools": "^4.0.0-alpha.4",
     "@nuxt/module-builder": "^1.0.2",
-    "@nuxt/schema": "^4.3.1",
-    "@nuxt/test-utils": "^4.0.0",
-    "@types/node": "latest",
+    "@nuxt/schema": "^4.4.2",
+    "@nuxt/test-utils": "^4.0.2",
+    "@types/node": "^25.6.0",
     "changelogen": "^0.6.2",
-    "nuxt": "^4.3.1",
-    "typescript": "~5.9.3",
-    "vitest": "^4.0.18",
-    "vue-tsc": "^3.2.5"
+    "nuxt": "^4.4.2",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.5",
+    "vue-tsc": "^3.2.7"
   }
 }

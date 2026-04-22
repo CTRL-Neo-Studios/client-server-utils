@@ -32,27 +32,27 @@ export default defineNuxtModule<ModuleOptions>({
 		addServerImportsDir(resolver.resolve('runtime/utils/server/parsing'))
 
 		addTypeTemplate({
-			src: resolver.resolve('./runtime/types/server/utility'),
+			src: resolver.resolve('./runtime/types/server/utility.ts'),
 			filename: 'types/utility-server.d.ts',
 		})
 
 		addTypeTemplate({
-			src: resolver.resolve('./runtime/types/client/utility'),
+			src: resolver.resolve('./runtime/types/client/utility.ts'),
 			filename: 'types/utility-client.d.ts',
 		})
 
 		addTypeTemplate({
-			src: resolver.resolve('./runtime/types/shared/utility'),
+			src: resolver.resolve('./runtime/types/shared/utility.ts'),
 			filename: 'types/utility.d.ts',
 		})
 
 		addTypeTemplate({
-			src: resolver.resolve('./runtime/types/shared/role-checking'),
+			src: resolver.resolve('./runtime/types/shared/role-checking.ts'),
 			filename: 'types/role-checking.d.ts',
 		})
 
 		addTypeTemplate({
-			src: resolver.resolve('./runtime/types/shared/permissions'),
+			src: resolver.resolve('./runtime/types/shared/permissions.ts'),
 			filename: 'types/permissions.d.ts',
 		})
 

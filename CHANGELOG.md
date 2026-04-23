@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v2.0.4
+
+[compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.0.3...v2.0.4)
+
+### 🩹 Fixes
+
+- Make `satisfies` accept nullable user and guard null at runtime ([248d6b4](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/248d6b4))
+
+### 📖 Documentation
+
+- Add Permission Engine and Role Checker documentation ([83e35f6](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/83e35f6))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v2.0.3
 
 [compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.0.2...v2.0.3)

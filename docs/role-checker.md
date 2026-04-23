@@ -89,7 +89,12 @@ A role not present in the hierarchy returns level `-1` and always fails.
 Composite check. Combines role, banned, and verified constraints in a single call.
 Returns `true` only if **all** provided constraints pass.
 
+If `user` is `null` or `undefined`, returns `false` immediately — no further checks are run.
+This makes it safe to call directly with an unauthenticated user without a null guard at the call site.
+
 ```ts
+roles.satisfies(null)                          // false — not logged in
+roles.satisfies(undefined)                     // false — not logged in
 roles.satisfies(user)                          // banned check only (default behaviour)
 roles.satisfies(user, { minRole: 'user' })     // must be user or above, and not banned
 roles.satisfies(user, { roles: ['moderator', 'admin'] }) // exact role match, and not banned
@@ -137,6 +142,7 @@ const options = roles.hierarchy.map(role => ({ label: role, value: role }))
 
 ## Behaviour Notes
 
+- **`null`/`undefined` user always fails `satisfies`** — returns `false` immediately, no further checks run. Safe to call without a null guard at the call site.
 - **`roles` overrides `minRole`** — if both are provided in `satisfies`, `roles` is used for the check and `minRole` is ignored.
 - **Banned users are rejected by default** — `satisfies` returns `false` for banned users unless `opts.banned === true` explicitly opts in.
 - **Verification is not required by default** — `satisfies` does not check `getVerified` unless `opts.verified === true`.

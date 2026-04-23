@@ -26,7 +26,7 @@ export interface RoleChecker<TUser, TRole extends string> {
 	getRoleLevel(role?: string | null): number
 	hasMinRole(user: TUser, minRole: TRole): boolean
 	hasRole(user: TUser, ...roles: TRole[]): boolean
-	satisfies(user: TUser, opts?: RoleCheckOptions<TRole>): boolean
+	satisfies(user: TUser | null | undefined, opts?: RoleCheckOptions<TRole>): boolean
 	isAuthenticated(user?: TUser): boolean
 	/** Exposed so you can build UI dropdowns from it. */
 	hierarchy: readonly TRole[]

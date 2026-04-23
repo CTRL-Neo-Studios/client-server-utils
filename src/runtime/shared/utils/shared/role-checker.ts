@@ -20,7 +20,9 @@ export function createRoleChecker<TUser, TRole extends string>(
 		return roles.some((r) => r === userRole)
 	}
 
-	const satisfies = (user: TUser, opts?: RoleCheckOptions<TRole>): boolean => {
+	const satisfies = (user: TUser | null | undefined, opts?: RoleCheckOptions<TRole>): boolean => {
+		if (user == null) return false
+
 		// Banned check (default: reject banned)
 		const isBanned = config.getBanned?.(user) ?? false
 		if (opts?.banned !== true && isBanned) return false

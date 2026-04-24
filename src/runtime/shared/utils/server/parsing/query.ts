@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 /**
  * Safely converts a query value to a Date object.
  * Handles ISO strings and numeric timestamps.
@@ -60,48 +62,108 @@ export function queryToArray<T>(val: any): T[] | undefined {
 	return [val] as T[];
 }
 
-type FieldType = 'boolean' | 'number' | 'string' | 'array' | 'date';
+/* ------------------------------------------------------------------ */
+/*  Zod preprocessing helpers                                          */
+/* ------------------------------------------------------------------ */
 
-export type QueryMapConfig<T> = {
-	[K in keyof T]?: NonNullable<T[K]> extends Date
-		// 1. If it's exactly a Date, stop recursing
-		? FieldType
-		// 2. If it's an Array, stop recursing
-		: NonNullable<T[K]> extends any[]
-			? FieldType
-			// 3. If it's a generic Object, recurse!
-			: NonNullable<T[K]> extends Record<string, any>
-				? QueryMapConfig<NonNullable<T[K]>>
-				// 4. Otherwise, it's a primitive
-				: FieldType;
-};
+/**
+ * Unwraps optional/nullable/default wrappers to find the inner schema type.
+ */
+function unwrap(schema: z.ZodTypeAny): z.ZodTypeAny {
+	if (
+		schema instanceof z.ZodOptional ||
+		schema instanceof z.ZodNullable ||
+		schema instanceof z.ZodDefault
+	) {
+		return unwrap((schema._def as any).innerType)
+	}
+	return schema
+}
 
-export function parseQueryObject<T>(query: any, config: QueryMapConfig<T>): T {
-	if (!query || typeof query !== 'object' || Array.isArray(query)) {
-		return query;
+/**
+ * Wraps a field schema with the appropriate string coercion so that raw
+ * H3 query string values are converted to the schema's expected type
+ * before Zod validation runs.
+ *
+ * - `boolean` fields: `'true'/'1'` → `true`, `'false'/'0'` → `false`
+ * - `number` fields: numeric strings → number
+ * - `date` fields: ISO strings / Unix timestamp strings → Date
+ * - `array` fields: single values wrapped in an array
+ * - `string`, enums, unions, literals: already strings — no coercion needed
+ * - nested `object` fields: recursed into
+ */
+function coerce(schema: z.ZodTypeAny): any {
+	const inner = unwrap(schema)
+
+	if (inner instanceof z.ZodBoolean) {
+		return z.string().transform((val) => queryToBoolean(val)).pipe(schema as any)
 	}
 
-	const result: any = { ...query };
-
-	for (const [key, typeOrConfig] of Object.entries(config as any)) {
-		const val = query[key];
-
-		if (val === undefined || val === null) continue;
-
-		if (typeof typeOrConfig === 'object') {
-			result[key] = parseQueryObject(val, typeOrConfig as any);
-		} else {
-			switch (typeOrConfig) {
-				case 'boolean': result[key] = queryToBoolean(val); break;
-				case 'number': result[key] = queryToNumber(val); break;
-				case 'array': result[key] = queryToArray(val); break;
-				case 'date': result[key] = queryToDate(val); break; // <-- New Date Case
-				case 'string':
-					result[key] = Array.isArray(val) ? String(val[0]) : String(val);
-					break;
-			}
-		}
+	if (inner instanceof z.ZodNumber) {
+		return z.string().transform((val) => queryToNumber(val)).pipe(schema as any)
 	}
 
-	return result as T;
+	if (inner instanceof z.ZodDate) {
+		return z.string().transform((val) => queryToDate(val)).pipe(schema as any)
+	}
+
+	if (inner instanceof z.ZodArray) {
+		return z.any().transform((val) => queryToArray(val)).pipe(schema as any)
+	}
+
+	if (inner instanceof z.ZodObject) {
+		return coerceObject(inner)
+	}
+
+	// string, enum, union, literal, etc. — already strings from the query
+	return schema
+}
+
+/**
+ * Applies `coerce()` to every field in a ZodObject schema, returning a
+ * new schema with all fields wrapped in their respective coercions.
+ */
+function coerceObject<T extends z.ZodRawShape>(schema: z.ZodObject<T>): z.ZodObject<any> {
+	const coerced = Object.fromEntries(
+		Object.entries(schema.shape).map(([key, fieldSchema]) => [
+			key,
+			coerce(fieldSchema as z.ZodTypeAny),
+		])
+	)
+	return schema.extend(coerced)
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main utility                                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Parses and coerces an H3 query object against a Zod schema.
+ *
+ * All field values coming from `getQuery()` are strings. `parseQuery`
+ * automatically coerces them to the types declared in your schema
+ * before validation runs — so `boolean`, `number`, `Date`, and `array`
+ * fields work correctly without any manual conversion.
+ *
+ * @example
+ * import { parseQuery } from '@type32/nuxt-cs-utils/server'
+ * import { getQuery } from 'h3'
+ * import { z } from 'zod'
+ *
+ * const schema = z.object({
+ *   page:   z.number().optional(),
+ *   active: z.boolean().optional(),
+ *   status: z.enum(['open', 'closed']).optional(),
+ * })
+ *
+ * export default defineEventHandler((event) => {
+ *   const query = parseQuery(getQuery(event), schema)
+ *   // query: { page?: number, active?: boolean, status?: 'open' | 'closed' }
+ * })
+ */
+export function parseQuery<T extends z.ZodRawShape>(
+	query: Record<string, unknown>,
+	schema: z.ZodObject<T>
+): z.infer<z.ZodObject<T>> {
+	return coerceObject(schema).parse(query) as z.infer<z.ZodObject<T>>
 }

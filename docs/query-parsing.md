@@ -1,180 +1,172 @@
 # Query Parsing
 
-Server-side utilities for safely coercing H3 query string values into typed primitives. All functions handle `undefined`, `null`, empty strings, and H3's multi-value arrays (e.g. `?flag=true&flag=false`) without throwing. Available via `@type32/nuxt-cs-utils/server` or as Nuxt server auto-imports.
+Server-side utilities for safely parsing and coercing H3 query string values into properly typed values. Available via `@type32/nuxt-cs-utils/server` or as Nuxt server auto-imports.
+
+The root problem these utilities solve: `getQuery(event)` in H3/Nuxt returns everything as strings (or string arrays), even when the TypeScript type says `number` or `boolean`. These utilities ensure the runtime values actually match the declared types.
 
 ---
 
-## `queryToBoolean(val)`
+## `parseQuery(query, schema)`
 
-Converts a query value to a `boolean`, or `undefined` if the value is absent or unparseable.
+The primary utility. Accepts the raw query object from `getQuery(event)` and a Zod schema, automatically coerces every field from its raw string representation to the type declared in the schema, then validates and returns the result fully typed.
 
-**Accepts:** `'true'`, `'false'`, `'1'`, `'0'`, actual `boolean` values, and H3 arrays (takes the first element).
-
-**Returns `undefined` for:** empty string, `'null'`, `'undefined'`, or any value that doesn't match a known truthy/falsy string.
+No separate TypeScript interface needed — the return type is inferred directly from the schema.
 
 ```ts
-queryToBoolean('true')          // true
-queryToBoolean('1')             // true
-queryToBoolean('false')         // false
-queryToBoolean('0')             // false
-queryToBoolean(['true', 'false']) // true  (first element taken)
-queryToBoolean('')              // undefined
-queryToBoolean(undefined)       // undefined
-queryToBoolean('null')          // undefined
+import { parseQuery } from '@type32/nuxt-cs-utils/server'
+import { getQuery } from 'h3'
+import { z } from 'zod'
+
+const querySchema = z.object({
+  page:        z.number().optional(),
+  search:      z.string().optional(),
+  active:      z.boolean().optional(),
+  createdAfter: z.date().optional(),
+  status:      z.enum(['open', 'closed', 'pending']).optional(),
+})
+
+export default defineEventHandler((event) => {
+  const query = parseQuery(getQuery(event), querySchema)
+  // {
+  //   page?: number          ← '2' → 2
+  //   search?: string        ← 'foo' → 'foo'
+  //   active?: boolean       ← 'true' → true
+  //   createdAfter?: Date    ← '2024-06-01' → Date
+  //   status?: 'open' | 'closed' | 'pending'
+  // }
+})
+```
+
+### Coercion rules
+
+`parseQuery` inspects each field in the schema and applies the appropriate coercion before Zod validation runs:
+
+| Schema type | Raw query string | Coerced to |
+|---|---|---|
+| `z.boolean()` | `'true'`, `'1'` | `true` |
+| `z.boolean()` | `'false'`, `'0'` | `false` |
+| `z.number()` | `'42'`, `'3.14'` | `42`, `3.14` |
+| `z.date()` | `'2024-06-01'`, `'1717228800000'` | `Date` |
+| `z.array(...)` | `'active'` (single value) | `['active']` |
+| `z.string()` | `'foo'` | `'foo'` (unchanged) |
+| `z.enum(...)` | `'open'` | `'open'` (validated, not coerced) |
+
+Coercion is applied recursively to nested `z.object()` schemas. Fields wrapped in `z.optional()`, `z.nullable()`, or `z.default()` are unwrapped first so the coercion still targets the correct inner type.
+
+### String unions and enums
+
+`z.enum()` fields are strings in both raw query and coerced output — no coercion is needed, only validation. If the value isn't in the enum, Zod throws a `ZodError` as normal.
+
+```ts
+const querySchema = z.object({
+  status: z.enum(['open', 'closed', 'pending']).optional(),
+})
+
+// ?status=open   → { status: 'open' }   ✓
+// ?status=bogus  → ZodError             ✗
+```
+
+### Nested objects
+
+```ts
+const querySchema = z.object({
+  page: z.number().optional(),
+  author: z.object({
+    id: z.number(),
+    verified: z.boolean().optional(),
+  }).optional(),
+})
+
+const query = parseQuery(getQuery(event), querySchema)
+// query.author.id is number, not string
+```
+
+### Validation errors
+
+`parseQuery` calls `.parse()` under the hood, so it throws a `ZodError` on invalid input. Use `.safeParse()` yourself if you need to handle errors without throwing:
+
+```ts
+const result = querySchema.parse(getQuery(event)) // throws on error
+// or handle manually:
+try {
+  const query = parseQuery(getQuery(event), querySchema)
+} catch (err) {
+  if (err instanceof ZodError) {
+    throw createError({ statusCode: 400, message: 'Invalid query parameters.' })
+  }
+  throw err
+}
 ```
 
 ---
 
-## `queryToNumber(val)`
+## Low-level converters
 
-Converts a query value to a `number`, or `undefined` if the value is absent or results in `NaN`.
+These are the individual coercion functions used internally by `parseQuery`. They are also exported for cases where you need to coerce a single value directly.
 
-**Accepts:** numeric strings, actual `number` values, and H3 arrays (takes the first element).
+All converters return `undefined` rather than throwing on bad input.
 
-**Returns `undefined` for:** empty string, `'null'`, `'undefined'`, and any string that does not parse to a valid number.
+### `queryToBoolean(val)`
 
-```ts
-queryToNumber('42')             // 42
-queryToNumber('3.14')           // 3.14
-queryToNumber(['99', '100'])    // 99  (first element taken)
-queryToNumber('abc')            // undefined
-queryToNumber('')               // undefined
-queryToNumber(undefined)        // undefined
-```
+Converts a query value to `boolean | undefined`.
 
----
-
-## `queryToDate(val)`
-
-Converts a query value to a `Date`, or `undefined` if the value is absent or produces an invalid date.
-
-**Accepts:** ISO 8601 strings, Unix timestamps as pure numeric strings, actual `Date` objects, and H3 arrays (takes the first element).
-
-**Returns `undefined` for:** empty string, `'null'`, `'undefined'`, invalid date strings, and `Date` objects that are already `NaN`.
+Accepts `'true'`, `'false'`, `'1'`, `'0'`, actual booleans, and H3 arrays (takes the first element).
 
 ```ts
-queryToDate('2024-06-01')               // Date (June 1 2024)
-queryToDate('2024-06-01T12:00:00Z')     // Date (June 1 2024 12:00 UTC)
-queryToDate('1717228800000')            // Date (Unix ms timestamp)
-queryToDate('not-a-date')              // undefined
-queryToDate('')                        // undefined
-queryToDate(undefined)                 // undefined
+queryToBoolean('true')             // true
+queryToBoolean('1')                // true
+queryToBoolean('false')            // false
+queryToBoolean(['true', 'false'])  // true  (first element)
+queryToBoolean('')                 // undefined
+queryToBoolean('null')             // undefined
 ```
 
----
+### `queryToNumber(val)`
 
-## `queryToArray<T>(val)`
+Converts a query value to `number | undefined`.
 
-Ensures a query value is an array of type `T`, or `undefined` if the value is absent.
+Accepts numeric strings, actual numbers, and H3 arrays (takes the first element). Returns `undefined` for `NaN`, empty strings, and null-like values.
 
-If the value is already an array (as H3 produces for repeated params), it is returned as-is. If it is a scalar, it is wrapped in a single-element array. Does **not** parse comma-separated strings.
+```ts
+queryToNumber('42')          // 42
+queryToNumber('3.14')        // 3.14
+queryToNumber(['99', '100']) // 99  (first element)
+queryToNumber('abc')         // undefined
+queryToNumber('')            // undefined
+```
 
-**Returns `undefined` for:** `undefined`, `null`, and empty string.
+### `queryToDate(val)`
+
+Converts a query value to `Date | undefined`.
+
+Accepts ISO 8601 strings, pure numeric strings (Unix ms timestamps), actual `Date` objects, and H3 arrays (takes the first element). Returns `undefined` for invalid dates.
+
+```ts
+queryToDate('2024-06-01')            // Date
+queryToDate('2024-06-01T12:00:00Z') // Date
+queryToDate('1717228800000')         // Date (Unix ms timestamp)
+queryToDate('not-a-date')           // undefined
+queryToDate('')                      // undefined
+```
+
+### `queryToArray<T>(val)`
+
+Ensures a query value is `T[] | undefined`.
+
+If the value is already an array (as H3 produces for repeated params like `?x=a&x=b`), returns it as-is. If it is a scalar, wraps it in a single-element array. Does **not** parse comma-separated strings.
 
 ```ts
 queryToArray('active')               // ['active']
 queryToArray(['active', 'pending'])  // ['active', 'pending']
 queryToArray('')                     // undefined
 queryToArray(null)                   // undefined
-queryToArray(undefined)              // undefined
 ```
-
-With a type parameter:
-
-```ts
-type Status = 'active' | 'pending' | 'archived'
-
-const statuses = queryToArray<Status>(getQuery(event).status)
-// Status[] | undefined
-```
-
----
-
-## `parseQueryObject(query, config)`
-
-Parses a raw H3 query object into a typed value `T` by applying per-field type coercions defined in a `QueryMapConfig<T>`.
-
-Keys not listed in the config are passed through unchanged. Keys with `null` or `undefined` values are skipped.
-
-```ts
-import { parseQueryObject } from '@type32/nuxt-cs-utils/server'
-// or as a Nuxt server auto-import
-
-type PostFilters = {
-  search: string
-  page: number
-  published: boolean
-  createdAfter: Date
-  status: string[]
-}
-
-export default defineEventHandler((event) => {
-  const filters = parseQueryObject<PostFilters>(getQuery(event), {
-    search: 'string',
-    page: 'number',
-    published: 'boolean',
-    createdAfter: 'date',
-    status: 'array',
-  })
-
-  // filters is typed as PostFilters
-  // e.g. ?page=2&published=true&status=active&status=pending
-  // → { page: 2, published: true, status: ['active', 'pending'], ... }
-})
-```
-
-### Nested objects
-
-`QueryMapConfig<T>` recurses into nested object types. Provide a nested config object instead of a `FieldType` string for nested keys.
-
-```ts
-type Filters = {
-  page: number
-  author: {
-    id: number
-    verified: boolean
-  }
-}
-
-const filters = parseQueryObject<Filters>(getQuery(event), {
-  page: 'number',
-  author: {
-    id: 'number',
-    verified: 'boolean',
-  },
-})
-```
-
----
-
-## `QueryMapConfig<T>`
-
-A recursive mapped type that describes how each field of `T` should be coerced.
-
-```ts
-type FieldType = 'boolean' | 'number' | 'string' | 'array' | 'date'
-
-type QueryMapConfig<T> = {
-  [K in keyof T]?: FieldType | QueryMapConfig<NonNullable<T[K]>>
-}
-```
-
-All keys are optional — omitting a key leaves its value untouched in the result.
-
-| `FieldType` | Coercion applied |
-|---|---|
-| `'string'` | `String(val)`, or `String(val[0])` for arrays |
-| `'number'` | `queryToNumber(val)` |
-| `'boolean'` | `queryToBoolean(val)` |
-| `'date'` | `queryToDate(val)` |
-| `'array'` | `queryToArray(val)` |
-| _(nested object)_ | Recurses with the nested `QueryMapConfig` |
 
 ---
 
 ## Behaviour Notes
 
-- **Nothing throws** — all converters return `undefined` on bad or absent input rather than throwing.
-- **Multi-value params** — for scalar converters (`queryToBoolean`, `queryToNumber`, `queryToDate`), if H3 gives an array (e.g. `?x=1&x=2`), the **first element** is used.
-- **`null`/`undefined` fields are skipped** by `parseQueryObject` — they remain in the result as-is without being passed through a coercion function.
-- **`queryToArray` does not split strings** — `'active,pending'` becomes `['active,pending']`, not `['active', 'pending']`. Split first if you need that behaviour.
+- **Nothing throws** — all low-level converters return `undefined` on bad or absent input rather than throwing. `parseQuery` itself throws a `ZodError` on schema validation failure.
+- **Multi-value params** — for scalar converters, if H3 produces an array (e.g. `?x=1&x=2`), the **first element** is used.
+- **`queryToArray` does not split strings** — `'active,pending'` becomes `['active,pending']`, not `['active', 'pending']`. Split the string first if needed.
+- **`parseQuery` requires a `z.object()` schema** — passing a non-object schema (e.g. `z.string()`) is a type error.

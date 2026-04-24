@@ -17,5 +17,7 @@ export {
 	queryToBoolean,
 	queryToNumber,
 	queryToArray,
-	parseQuery,
+	parseQueryObject,
 } from './shared/utils/server/parsing/query'
+
+export type { QueryMapConfig } from './shared/utils/server/parsing/query'

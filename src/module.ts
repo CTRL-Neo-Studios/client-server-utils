@@ -1,7 +1,9 @@
 import {
 	defineNuxtModule,
 	createResolver,
+	addImports,
 	addImportsDir,
+	addServerImports,
 	addServerImportsDir,
 	addTypeTemplate,
 } from '@nuxt/kit'
@@ -20,12 +22,28 @@ export default defineNuxtModule<ModuleOptions>({
 		// ---- Auto-imports (shared — available in both client and server) ----
 		addImportsDir(resolver.resolve('runtime/shared/utils/shared'))
 		addImportsDir(resolver.resolve('runtime/shared/utils/shared/parsing'))
-		addImportsDir(resolver.resolve('runtime/shared/utils/shared/permissions'))
+
+		const importsShared = [
+			// permissions/runtime
+			{ name: 'gate', from: resolver.resolve('runtime/shared/utils/shared/permissions/runtime') },
+			{ name: 'prerequisite', from: resolver.resolve('runtime/shared/utils/shared/permissions/runtime') },
+			{ name: 'condition', from: resolver.resolve('runtime/shared/utils/shared/permissions/runtime') },
+			{ name: 'custom', from: resolver.resolve('runtime/shared/utils/shared/permissions/runtime') },
+			{ name: 'allOf', from: resolver.resolve('runtime/shared/utils/shared/permissions/runtime') },
+			{ name: 'anyOf', from: resolver.resolve('runtime/shared/utils/shared/permissions/runtime') },
+			{ name: 'not', from: resolver.resolve('runtime/shared/utils/shared/permissions/runtime') },
+			{ name: 'checkPermission', from: resolver.resolve('runtime/shared/utils/shared/permissions/runtime') },
+			{ name: 'auditPermission', from: resolver.resolve('runtime/shared/utils/shared/permissions/runtime') },
+			// permissions/engine
+			{ name: 'definePermission', from: resolver.resolve('runtime/shared/utils/shared/permissions/engine') },
+			{ name: 'createPermissionEngine', from: resolver.resolve('runtime/shared/utils/shared/permissions/engine') },
+		]
+		addImports(importsShared)
 
 		// ---- Auto-imports (server-only) -------------------------------------
 		addServerImportsDir(resolver.resolve('runtime/shared/utils/shared'))
 		addServerImportsDir(resolver.resolve('runtime/shared/utils/shared/parsing'))
-		addServerImportsDir(resolver.resolve('runtime/shared/utils/shared/permissions'))
+		addServerImports(importsShared)
 		addServerImportsDir(resolver.resolve('runtime/shared/utils/server'))
 		addServerImportsDir(resolver.resolve('runtime/shared/utils/server/pagination'))
 		addServerImportsDir(resolver.resolve('runtime/shared/utils/server/parsing'))

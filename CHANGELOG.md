@@ -1,6 +1,33 @@
 # Changelog
 
 
+## v2.1.0
+
+[compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.0.4...v2.1.0)
+
+### 🚀 Enhancements
+
+- Replace `parseQueryObject` with Zod-based `parseQuery` ([f0775cc](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/f0775cc))
+- Replace `parseQueryObject` with Zod-based `parseQuery`" ([ecf4794](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/ecf4794))
+- Add conversion helpers between offset and cursor pagination ([55e9661](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/55e9661))
+
+### 💅 Refactors
+
+- Use explicit imports for permissions runtime and engine ([b77d88c](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/b77d88c))
+
+### 📖 Documentation
+
+- Add query parsing documentation ([164a024](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/164a024))
+
+### 🏡 Chore
+
+- Update dependencies ([4950cdb](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/4950cdb))
+- Remove bun.lock ([f8a409a](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/f8a409a))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v2.0.4
 
 [compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.0.3...v2.0.4)

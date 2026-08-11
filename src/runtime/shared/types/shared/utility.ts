@@ -13,6 +13,34 @@ export interface OffsetPagination {
 	limit?: number;
 }
 
+/**
+ * Fully resolved offset params — every field defaulted and validated.
+ * This is what `useServerOffsetPagination` exposes and what
+ * `useServerCursorPagination().toOffset()` returns.
+ */
+export interface ResolvedOffsetPagination {
+	/** 1-based page number. */
+	page: number;
+	/** Rows per page. */
+	limit: number;
+	/** Rows to skip — `(page - 1) * limit`. */
+	offset: number;
+}
+
+/**
+ * Fully resolved cursor params — every field defaulted and validated.
+ * This is what `useServerCursorPagination` exposes and what
+ * `useServerOffsetPagination().toCursor()` returns.
+ */
+export interface ResolvedCursorPagination {
+	/** Position to resume after, or `undefined` for the first page. */
+	cursor: number | undefined;
+	/** Rows per page. */
+	pageSize: number;
+	/** `pageSize + 1` — fetch this many to detect `hasMore` without a count query. */
+	fetchLimit: number;
+}
+
 /** Merges T with cursor pagination params. If no T, just cursor params. */
 export type WithCursorPagination<T = void> = T extends void
 	? CursorPagination

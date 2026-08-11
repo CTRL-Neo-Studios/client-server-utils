@@ -57,20 +57,20 @@
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit"
   },
   "dependencies": {
-    "@internationalized/date": "^3.12.2",
-    "@nuxt/kit": "^4.4.8",
+    "@internationalized/date": "^3.12.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@nuxt/devtools": "^4.0.0-alpha.7",
-    "@nuxt/module-builder": "^1.0.2",
-    "@nuxt/schema": "^4.4.8",
-    "@nuxt/test-utils": "^4.0.3",
-    "@types/node": "^25.9.3",
+    "@nuxt/devtools": "4.0.0-alpha.10",
+    "@nuxt/kit": "^4.5.2",
+    "@nuxt/module-builder": "^1.0.3",
+    "@nuxt/schema": "^4.5.2",
+    "@nuxt/test-utils": "^4.1.0",
+    "@types/node": "^26.2.0",
     "changelogen": "^0.6.2",
-    "nuxt": "^4.4.8",
+    "nuxt": "^4.5.2",
     "typescript": "~6.0.3",
-    "vitest": "^4.1.8",
-    "vue-tsc": "^3.3.4"
+    "vitest": "^4.1.10",
+    "vue-tsc": "^3.3.9"
   }
 }

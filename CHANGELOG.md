@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v2.2.1
+
+[compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.2.0...v2.2.1)
+
+### 🩹 Fixes
+
+- Treat cursor as an opaque string in keyset pagination ([4f2c7b6](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/4f2c7b6))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v2.2.0
 
 [compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.1.0...v2.2.0)

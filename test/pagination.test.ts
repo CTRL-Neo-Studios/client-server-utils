@@ -38,7 +38,7 @@ describe('useServerCursorPagination', () => {
 		const { toResult } = useServerCursorPagination(evt({ pageSize: '2' }), { cursorKey: 'id' })
 		expect(toResult(ids(3))).toEqual({
 			data: [{ id: 1 }, { id: 2 }],
-			nextCursor: 2,
+			nextCursor: '2',
 			hasMore: true,
 			pageSize: 2,
 		})
@@ -68,7 +68,7 @@ describe('useServerCursorPagination', () => {
 		const { paginate } = useServerCursorPagination(evt({ pageSize: '2' }), { cursorKey: 'id' })
 		expect(paginate(ids(5))).toEqual({
 			data: [{ id: 1 }, { id: 2 }],
-			nextCursor: 2,
+			nextCursor: '2',
 			hasMore: true,
 			pageSize: 2,
 		})
@@ -78,7 +78,7 @@ describe('useServerCursorPagination', () => {
 		const { paginate } = useServerCursorPagination(evt({ cursor: '2', pageSize: '2' }), { cursorKey: 'id' })
 		expect(paginate(ids(5))).toEqual({
 			data: [{ id: 3 }, { id: 4 }],
-			nextCursor: 4,
+			nextCursor: '4',
 			hasMore: true,
 			pageSize: 2,
 		})

@@ -84,8 +84,8 @@ export function useServerCursorPagination(event: H3Event, options: CursorPaginat
 	 * {@link CursorResult}, deriving `hasMore` and `nextCursor`.
 	 *
 	 * Pass exactly the rows returned by a `LIMIT fetchLimit` query. `hasMore` is
-	 * true when an overflow row is present; `nextCursor` is then the `cursorKey`
-	 * of the last *kept* row, or `null` on the final page.
+	 * true when an overflow row is present; `nextCursor` is then the stringified
+	 * `cursorKey` of the last *kept* row, or `null` on the final page.
 	 *
 	 * @param rows Up to `fetchLimit` rows, already ordered by `cursorKey`.
 	 * @returns {CursorResult<T>} The page with the overflow row trimmed off.
@@ -93,7 +93,8 @@ export function useServerCursorPagination(event: H3Event, options: CursorPaginat
 	function toResult<T extends Record<string, any>>(rows: T[]): CursorResult<T> {
 		const hasMore = rows.length > pageSize;
 		const data = hasMore ? rows.slice(0, pageSize) : rows;
-		const nextCursor = hasMore ? (data[data.length - 1]?.[cursorKey] ?? null) : null;
+		const lastValue = data[data.length - 1]?.[cursorKey];
+		const nextCursor = hasMore && lastValue != null ? String(lastValue) : null;
 
 		return {
 			data,
@@ -115,7 +116,7 @@ export function useServerCursorPagination(event: H3Event, options: CursorPaginat
 	 * so numeric, string, and large-integer keys all match their round-tripped values.
 	 *
 	 * @param data Every row, unpaginated and ordered by `cursorKey`.
-	 * @returns {CursorResult<T>} The page following the row whose `cursorKey` equals `cursor`.
+	 * @returns {CursorResult<T>} The page following the cursor row; `nextCursor` is a string or `null`.
 	 */
 	function paginate<T extends Record<string, any>>(data: T[]): CursorResult<T> {
 		let startIndex = 0;
@@ -128,7 +129,8 @@ export function useServerCursorPagination(event: H3Event, options: CursorPaginat
 		const sliced = data.slice(startIndex, startIndex + pageSize + 1);
 		const hasMore = sliced.length > pageSize;
 		const result = hasMore ? sliced.slice(0, pageSize) : sliced;
-		const nextCursor = hasMore ? (result[result.length - 1]?.[cursorKey] ?? null) : null;
+		const lastValue = result[result.length - 1]?.[cursorKey];
+		const nextCursor = hasMore && lastValue != null ? String(lastValue) : null;
 
 		return {
 			data: result,

@@ -139,12 +139,12 @@ export default defineEventHandler(async (event) => {
 Pass exactly the rows returned by a `LIMIT fetchLimit` query. `cursorKey` comes from the options you passed to the composable and must be the column you ordered by.
 
 - `hasMore` is `true` when an overflow row is present.
-- `nextCursor` is the `cursorKey` of the last **kept** row, or `null` on the final page.
+- `nextCursor` is the stringified `cursorKey` of the last **kept** row, or `null` on the final page.
 
 ```ts
 // ?pageSize=2 — fetched 3 rows (fetchLimit), so there is more
 toResult([{id:1},{id:2},{id:3}])
-// { data: [{id:1},{id:2}], nextCursor: 2, hasMore: true, pageSize: 2 }
+// { data: [{id:1},{id:2}], nextCursor: '2', hasMore: true, pageSize: 2 }
 
 // ?pageSize=5 — only 5 rows exist, no overflow row
 toResult([{id:1},{id:2},{id:3},{id:4},{id:5}])
@@ -159,10 +159,10 @@ Use when you already hold **every** row in memory. Finds the row whose `cursorKe
 const all = [{id:1},{id:2},{id:3},{id:4},{id:5}]
 
 // ?pageSize=2 — no cursor, first page
-paginate(all)  // { data: [{id:1},{id:2}], nextCursor: 2, hasMore: true,  pageSize: 2 }
+paginate(all)  // { data: [{id:1},{id:2}], nextCursor: '2', hasMore: true,  pageSize: 2 }
 
 // ?cursor=2&pageSize=2 — resumes after id 2
-paginate(all)  // { data: [{id:3},{id:4}], nextCursor: 4, hasMore: true,  pageSize: 2 }
+paginate(all)  // { data: [{id:3},{id:4}], nextCursor: '4', hasMore: true,  pageSize: 2 }
 
 // ?cursor=4&pageSize=2 — final page
 paginate(all)  // { data: [{id:5}],        nextCursor: null, hasMore: false, pageSize: 2 }
@@ -230,7 +230,7 @@ interface PaginatedResult<T> {
 
 interface CursorResult<T> {
   data: T[]
-  nextCursor: string | number | null
+  nextCursor: string | null
   hasMore: boolean
   pageSize: number
 }

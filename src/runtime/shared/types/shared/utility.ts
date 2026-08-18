@@ -66,7 +66,7 @@ export interface PaginatedResult<T> {
 
 export interface CursorResult<T> {
 	data: T[];
-	nextCursor: string | number | null;
+	nextCursor: string | null;
 	hasMore: boolean;
 	pageSize: number;
 }

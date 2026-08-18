@@ -110,6 +110,35 @@ describe('useServerCursorPagination', () => {
 		expect(paginate(ids(3)).data).toEqual([{ id: 1 }, { id: 2 }])
 	})
 
+	it('paginate matches a numeric cursor against string column values', () => {
+		const rows = [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }, { id: '5' }]
+		const { paginate } = useServerCursorPagination(evt({ cursor: '2', pageSize: '2' }), { cursorKey: 'id' })
+		expect(paginate(rows)).toEqual({
+			data: [{ id: '3' }, { id: '4' }],
+			nextCursor: '4',
+			hasMore: true,
+			pageSize: 2,
+		})
+	})
+
+	it('does not lose precision on large integer keys', () => {
+		const rows = [
+			{ id: '1234567890123456789' },
+			{ id: '1234567890123456790' },
+			{ id: '1234567890123456791' },
+		]
+		const { paginate } = useServerCursorPagination(
+			evt({ cursor: '1234567890123456789', pageSize: '1' }),
+			{ cursorKey: 'id' },
+		)
+		expect(paginate(rows)).toEqual({
+			data: [{ id: '1234567890123456790' }],
+			nextCursor: '1234567890123456790',
+			hasMore: true,
+			pageSize: 1,
+		})
+	})
+
 	it('toOffset maps a numeric cursor to page/limit/offset', () => {
 		const { toOffset } = useServerCursorPagination(evt({ cursor: '40', pageSize: '20' }), { cursorKey: 'id' })
 		expect(toOffset()).toEqual({ page: 3, limit: 20, offset: 40 })

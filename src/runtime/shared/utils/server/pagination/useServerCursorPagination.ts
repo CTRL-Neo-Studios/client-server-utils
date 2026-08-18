@@ -22,9 +22,10 @@ interface CursorPaginationOptions {
  * Parses and validates cursor (keyset) pagination params from an H3 event's
  * query string, then returns helpers for shaping the response.
  *
- * Reads `?cursor=` and `?pageSize=`. Both are coerced from strings; `pageSize` is
- * bounds-checked and out-of-range values throw a `ZodError`. An absent `cursor`
- * means "first page".
+ * Reads `?cursor=` and `?pageSize=`. `cursor` is kept as an opaque string — it
+ * is never coerced to a number, so string, UUID, and large integer keys are not
+ * corrupted. `pageSize` is coerced to a number and bounds-checked; out-of-range
+ * values throw a `ZodError`. An absent `cursor` means "first page".
  *
  * The returned `fetchLimit` is `pageSize + 1` — always fetch that many rows so
  * `hasMore` can be determined from the overflow row instead of a second `COUNT`
@@ -61,7 +62,7 @@ export function useServerCursorPagination(event: H3Event, options: CursorPaginat
 		cursor: z
 			.preprocess(
 				(v) => (v === '' ? undefined : v),
-				z.union([z.coerce.number(), z.string()]).optional(),
+				z.string().optional(),
 			),
 		pageSize: z.coerce
 			.number()
@@ -110,6 +111,9 @@ export function useServerCursorPagination(event: H3Event, options: CursorPaginat
 	 * the beginning. Prefer {@link toResult} with a database-side `WHERE`/`LIMIT`
 	 * for large sets — this loads every row into memory first.
 	 *
+	 * The cursor is matched by comparing string representations (`String(row[cursorKey]) === cursor`),
+	 * so numeric, string, and large-integer keys all match their round-tripped values.
+	 *
 	 * @param data Every row, unpaginated and ordered by `cursorKey`.
 	 * @returns {CursorResult<T>} The page following the row whose `cursorKey` equals `cursor`.
 	 */
@@ -117,7 +121,7 @@ export function useServerCursorPagination(event: H3Event, options: CursorPaginat
 		let startIndex = 0;
 
 		if (cursor != null) {
-			const cursorIndex = data.findIndex((item) => item[cursorKey] === cursor);
+			const cursorIndex = data.findIndex((item) => String(item[cursorKey]) === cursor);
 			startIndex = cursorIndex === -1 ? data.length : cursorIndex + 1;
 		}
 
@@ -158,13 +162,13 @@ export function useServerCursorPagination(event: H3Event, options: CursorPaginat
 	 * @returns {ResolvedOffsetPagination} The cursor reinterpreted as page/limit/offset.
 	 */
 	function toOffset(): ResolvedOffsetPagination {
-		if (typeof cursor === 'string') {
+		const resolvedOffset = cursor === undefined ? 0 : Number(cursor);
+
+		if (Number.isNaN(resolvedOffset)) {
 			throw new TypeError(
 				`toOffset() requires a numeric cursor; "${cursorKey}" holds the non-numeric value "${cursor}"`,
 			)
 		}
-
-		const resolvedOffset = cursor ?? 0;
 
 		return {
 			page: Math.floor(resolvedOffset / pageSize) + 1,

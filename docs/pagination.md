@@ -94,7 +94,7 @@ Prefer `toResult` with a database-side `LIMIT`/`OFFSET` for large tables; `pagin
 
 ## `useServerCursorPagination(event, options)`
 
-Reads `?cursor=` and `?pageSize=`. An absent `cursor` means "first page".
+Reads `?cursor=` and `?pageSize=`. `cursor` is kept as an opaque string — it is never coerced to a number, so string, UUID, and large-integer keys are not corrupted. An absent `cursor` means "first page".
 
 The returned `fetchLimit` is `pageSize + 1`. **Always fetch that many rows** — `hasMore` is derived from whether the overflow row came back, which avoids a second `COUNT` query. Both `toResult` and `paginate` expect that extra row and trim it off.
 
@@ -118,7 +118,7 @@ export default defineEventHandler(async (event) => {
 
 | Field | Type | Description |
 |---|---|---|
-| `cursor` | `string \| number \| undefined` | Resolved cursor. `undefined` on the first page. |
+| `cursor` | `string \| undefined` | Opaque cursor string. `undefined` on the first page. |
 | `pageSize` | `number` | Resolved rows per page. |
 | `fetchLimit` | `number` | `pageSize + 1` — the number of rows to fetch. |
 | `toResult` | `(rows) => CursorResult` | Trims the overflow row and wraps the page. |
@@ -210,7 +210,7 @@ const { page, limit, offset } = toOffset()
 
 Two consequences worth internalising:
 
-1. **`toOffset()` and `paginate()` read `cursor` differently, by design.** `paginate()` treats it as a keyset value (`findIndex(item => item[cursorKey] === cursor)`); `toOffset()` treats it as a row offset. Mixing both on one request produces wrong results — pick one interpretation per endpoint.
+1. **`toOffset()` and `paginate()` read `cursor` differently, by design.** `paginate()` treats it as a keyset value (`findIndex(item => String(item[cursorKey]) === cursor)`); `toOffset()` treats it as a row offset. Mixing both on one request produces wrong results — pick one interpretation per endpoint.
 2. **`toOffset()`'s `page` is lossy when `cursor` is not a multiple of `pageSize`.** With `?cursor=45&pageSize=20` you get `page: 3`, whose first row is 40, not 45. `offset` always carries the true cursor, so prefer `limit`/`offset` over `page` when the cursor may be unaligned. The round trip stays exact because `toCursor()` only ever emits aligned multiples.
 
 ---
@@ -303,7 +303,7 @@ Note the contrast with the [query parsing](./query-parsing.md) utilities, which 
 - **These composables throw; the query parsing utilities do not.** Wrap the call if you need a 400 instead of a 500.
 - **`cursor` has no lower bound.** Unlike `pageSize`, a negative `?cursor=-5` is accepted and passed through unvalidated. Feeding one to `toOffset()` produces `{ page: 0, limit: 20, offset: -5 }`, breaking the 1-based `page` contract and yielding a negative `offset` that most drivers reject. Validate the cursor yourself if it reaches the database.
 - **`?cursor=` (empty) is treated as an absent cursor**, i.e. the first page — the same as omitting the param entirely.
-- **`toOffset()` throws a `TypeError` when the cursor is a string.** A string cursor is a keyset value (e.g. a UUID), not a row offset, so there is no offset to recover.
+- **`toOffset()` throws a `TypeError` when the cursor is non-numeric.** A non-numeric cursor is a keyset value (e.g. a UUID), not a row offset, so there is no offset to recover.
 - **`page` and `limit` are not required to be integers.** `?page=2.5` is accepted as `2.5`, producing a fractional `offset`. Add your own integer check if that matters to your data layer.
 - **A page past the end returns empty `data`, not an error** — `total` and `totalPages` remain accurate so the client can detect it.
 - **An unknown cursor returns an empty page**, never a silent restart from the first page.

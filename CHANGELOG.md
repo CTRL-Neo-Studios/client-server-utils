@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v2.2.0
+
+[compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.1.0...v2.2.0)
+
+### 🚀 Enhancements
+
+- Support string cursors and move cursorKey into options ([1abd7b6](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/1abd7b6))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v2.1.0
 
 [compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.0.4...v2.1.0)

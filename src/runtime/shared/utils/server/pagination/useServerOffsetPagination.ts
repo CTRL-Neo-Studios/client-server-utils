@@ -68,6 +68,7 @@ export function useServerOffsetPagination(event: H3Event, options?: OffsetPagina
 	 *
 	 * @param data The current page of rows.
 	 * @param total Total row count across all pages, ignoring pagination.
+	 * @returns {PaginatedResult<T>} The page wrapped with pagination metadata.
 	 */
 	function toResult<T>(data: T[], total: number): PaginatedResult<T> {
 		return {
@@ -84,9 +85,8 @@ export function useServerOffsetPagination(event: H3Event, options?: OffsetPagina
 	 * {@link PaginatedResult}. `total` is taken from the array's length.
 	 *
 	 * Prefer {@link toResult} with a database-side `LIMIT`/`OFFSET` for large sets —
-	 * this loads every row into memory first.
-	 *
 	 * @param data Every row, unpaginated.
+	 * @returns {PaginatedResult<T>} The requested page sliced from `data`.
 	 */
 	function paginate<T>(data: T[]): PaginatedResult<T> {
 		const total = data.length;
@@ -119,6 +119,8 @@ export function useServerOffsetPagination(event: H3Event, options?: OffsetPagina
 	 * const { cursor, fetchLimit } = toCursor()
 	 * const rows = await fetchFeed({ after: cursor, take: fetchLimit })
 	 * ```
+	 *
+	 * @returns {ResolvedCursorPagination} The params reinterpreted as cursor/pageSize.
 	 */
 	function toCursor(): ResolvedCursorPagination {
 		return {

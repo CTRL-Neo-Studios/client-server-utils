@@ -34,7 +34,7 @@ export interface ResolvedOffsetPagination {
  */
 export interface ResolvedCursorPagination {
 	/** Position to resume after, or `undefined` for the first page. */
-	cursor: number | undefined;
+	cursor: string | number | undefined;
 	/** Rows per page. */
 	pageSize: number;
 	/** `pageSize + 1` — fetch this many to detect `hasMore` without a count query. */

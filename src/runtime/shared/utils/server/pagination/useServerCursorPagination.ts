@@ -8,6 +8,8 @@ import type {
 
 /** Options for {@link useServerCursorPagination}. */
 interface CursorPaginationOptions {
+	/** Column holding the cursor value — must match the ORDER BY column. */
+	cursorKey: string;
 	/** Page size used when the request omits `pageSize`. Defaults to `20`. */
 	defaultPageSize?: number;
 	/** Upper bound for `pageSize`. Requests above this are rejected. Defaults to `100`. */
@@ -35,28 +37,32 @@ interface CursorPaginationOptions {
  * @example Database-backed — fetch `fetchLimit` rows, let `toResult` trim
  * ```ts
  * export default defineEventHandler(async (event) => {
- *   const { cursor, fetchLimit, toResult } = useServerCursorPagination(event)
+ *   const { cursor, fetchLimit, toResult } = useServerCursorPagination(event, { cursorKey: 'id' })
  *   const rows = await db.select().from(posts)
  *     .where(cursor ? gt(posts.id, cursor) : undefined)
  *     .orderBy(posts.id)
  *     .limit(fetchLimit)
- *   return toResult(rows, 'id')
+ *   return toResult(rows)
  * })
  * ```
  *
  * @example In-memory — `paginate` locates the cursor row and slices
  * ```ts
  * export default defineEventHandler(async (event) => {
- *   const { paginate } = useServerCursorPagination(event)
- *   return paginate(await loadEveryPost(), 'id')
+ *   const { paginate } = useServerCursorPagination(event, { cursorKey: 'id' })
+ *   return paginate(await loadEveryPost())
  * })
  * ```
  */
-export function useServerCursorPagination(event: H3Event, options?: CursorPaginationOptions) {
-	const { defaultPageSize = 20, maxPageSize = 100, minPageSize = 1 } = options ?? {};
+export function useServerCursorPagination(event: H3Event, options: CursorPaginationOptions) {
+	const { defaultPageSize = 20, maxPageSize = 100, minPageSize = 1, cursorKey } = options;
 
 	const cursorSchema = z.object({
-		cursor: z.coerce.number().optional(),
+		cursor: z
+			.preprocess(
+				(v) => (v === '' ? undefined : v),
+				z.union([z.coerce.number(), z.string()]).optional(),
+			),
 		pageSize: z.coerce
 			.number()
 			.min(minPageSize)
@@ -81,12 +87,9 @@ export function useServerCursorPagination(event: H3Event, options?: CursorPagina
 	 * of the last *kept* row, or `null` on the final page.
 	 *
 	 * @param rows Up to `fetchLimit` rows, already ordered by `cursorKey`.
-	 * @param cursorKey Column holding the cursor value — must match the ordering column.
+	 * @returns {CursorResult<T>} The page with the overflow row trimmed off.
 	 */
-	function toResult<T extends Record<string, any>>(
-		rows: T[],
-		cursorKey: keyof T,
-	): CursorResult<T> {
+	function toResult<T extends Record<string, any>>(rows: T[]): CursorResult<T> {
 		const hasMore = rows.length > pageSize;
 		const data = hasMore ? rows.slice(0, pageSize) : rows;
 		const nextCursor = hasMore ? (data[data.length - 1]?.[cursorKey] ?? null) : null;
@@ -108,12 +111,9 @@ export function useServerCursorPagination(event: H3Event, options?: CursorPagina
 	 * for large sets — this loads every row into memory first.
 	 *
 	 * @param data Every row, unpaginated and ordered by `cursorKey`.
-	 * @param cursorKey Column holding the cursor value — must match the ordering column.
+	 * @returns {CursorResult<T>} The page following the row whose `cursorKey` equals `cursor`.
 	 */
-	function paginate<T extends Record<string, any>>(
-		data: T[],
-		cursorKey: keyof T,
-	): CursorResult<T> {
+	function paginate<T extends Record<string, any>>(data: T[]): CursorResult<T> {
 		let startIndex = 0;
 
 		if (cursor != null) {
@@ -150,12 +150,20 @@ export function useServerCursorPagination(event: H3Event, options?: CursorPagina
 	 *
 	 * @example
 	 * ```ts
-	 * const { toOffset } = useServerCursorPagination(event)
+	 * const { toOffset } = useServerCursorPagination(event, { cursorKey: 'id' })
 	 * const { limit, offset } = toOffset()
 	 * const rows = await db.select().from(posts).limit(limit).offset(offset)
 	 * ```
+	 *
+	 * @returns {ResolvedOffsetPagination} The cursor reinterpreted as page/limit/offset.
 	 */
 	function toOffset(): ResolvedOffsetPagination {
+		if (typeof cursor === 'string') {
+			throw new TypeError(
+				`toOffset() requires a numeric cursor; "${cursorKey}" holds the non-numeric value "${cursor}"`,
+			)
+		}
+
 		const resolvedOffset = cursor ?? 0;
 
 		return {

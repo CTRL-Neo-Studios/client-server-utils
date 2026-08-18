@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v2.2.2
+
+[compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.2.1...v2.2.2)
+
+### 🩹 Fixes
+
+- Make nextCursor a string in keyset pagination ([c60b8c6](https://github.com/CTRL-Neo-Studios/client-server-utils/commit/c60b8c6))
+
+### ❤️ Contributors
+
+- Type-32 ([@Type-32](https://github.com/Type-32))
+
 ## v2.2.1
 
 [compare changes](https://github.com/CTRL-Neo-Studios/client-server-utils/compare/v2.2.0...v2.2.1)
